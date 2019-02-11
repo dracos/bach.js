@@ -38,6 +38,10 @@ var player; // The web player
 
 window.bach = bach = {};
 
+bach.start = function() {
+  player && player.play();
+};
+
 bach.stop = function() {
     player && player.stop();
 };
@@ -74,7 +78,7 @@ bach.process = function process(data) {
     }
 
     mod = 0;
-
+    
     for (i=0; i<notes; i++) {
         messages = [];
 
@@ -84,7 +88,7 @@ bach.process = function process(data) {
         }
         real = real_chord(i);
         var sa = 0, st = 0, sb = 0, at = 0, ab = 0, tb = 0;
-
+        
         switch (roman(i)) {
             case "Ic":
                 if (i < notes-1 && chord[i] == 1 && next_chord() != 5 && next_chord() != 9)
@@ -153,7 +157,6 @@ bach.process = function process(data) {
     }
 
     player = conductor.finish();
-    player.play();
 }
 
 function real_chord(c) {
