@@ -4,9 +4,6 @@
     <title>Bach.JS</title>
 <meta charset="utf-8">
 <meta name="viewport" content="initial-scale=1.0">
-<script src="band.js"></script>
-<script src="bach.js"></script>
-<script src="player.js"></script>
 <link href="https://fonts.googleapis.com/css?family=Crimson+Text" rel="stylesheet">
 <style>
     body {
@@ -79,23 +76,23 @@
     <main>
     <div>
     <h2>Examples</h2>
-    <ul>
-    <li><a href="javascript:bachLoad('examples/1i');">1i</a>,
-    <a href="javascript:bachLoad('examples/1ii');">1ii</a>,
-    <a href="javascript:bachLoad('examples/1iii');">1iii</a>,
-    <a href="javascript:bachLoad('examples/2');">2</a>,
-    <a href="javascript:bachLoad('examples/3a');">3a</a>,
-    <a href="javascript:bachLoad('examples/3b');">3b</a>,
-    <a href="javascript:bachLoad('examples/3c');">3c</a>
-    <li><a href="javascript:bachLoad('examples/Mod2a');">Mod2a</a>
-    <li><a href="javascript:bachLoad('examples/Mod2b');">Mod2b</a>
-    <li><a href="javascript:bachLoad('examples/MusicChor');">MusicChor</a> (try this one!)
-    <li><a href="javascript:bachLoad('examples/MusicChorG');">MusicChorG</a>
-    <li><a href="javascript:bachLoad('examples/MusicChor2');">MusicChor2</a>
-    <li><a href="javascript:bachLoad('examples/MusicSafe');">MusicSafe</a>
-    <li><a href="javascript:bachLoad('examples/Specimen');">Specimen</a>
-    <li><a href="javascript:bachLoad('examples/Specimen2');">Specimen2</a>
-    <li><a href="javascript:bachLoad('examples/SpringExam');">SpringExam</a>
+    <ul id="examples">
+    <li><a href="examples/1i">1i</a>,
+    <a href="examples/1ii">1ii</a>,
+    <a href="examples/1iii">1iii</a>,
+    <a href="examples/2">2</a>,
+    <a href="examples/3a">3a</a>,
+    <a href="examples/3b">3b</a>,
+    <a href="examples/3c">3c</a>
+    <li><a href="examples/Mod2a">Mod2a</a>
+    <li><a href="examples/Mod2b">Mod2b</a>
+    <li><a href="examples/MusicChor">MusicChor</a> (try this one!)
+    <li><a href="examples/MusicChorG">MusicChorG</a>
+    <li><a href="examples/MusicChor2">MusicChor2</a>
+    <li><a href="examples/MusicSafe">MusicSafe</a>
+    <li><a href="examples/Specimen">Specimen</a>
+    <li><a href="examples/Specimen2">Specimen2</a>
+    <li><a href="examples/SpringExam">SpringExam</a>
     </ul>
     </div>
     <div id="output_col">
@@ -113,5 +110,9 @@
     <!-- The file format is unique, if I took this up I’d presumably make it use Lilypond or ABC or something. -->
     <a href="https://github.com/dracos/bach.js">GitHub</a>.
     </footer>
+
+    <script src="band.js"></script>
+    <script src="bach.js"></script>
+    <script src="player.js"></script>
 </body>
 </html>

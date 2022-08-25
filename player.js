@@ -3,16 +3,25 @@ bachStop = function() {
     document.getElementById('stop').style.display = 'none';
 };
 
-bachLoad = function(file) {
+bachLoad = function(e) {
+    e.preventDefault();
     bachStop();
     var oput = document.getElementById('output');
     oput.innerHTML = '';
     oput.style.height = oput.offsetHeight + 'px';
     document.getElementById('stop').style.display = 'block';
+    data = this.dataset.data.split("\n");
+    bach.process(data);
+};
+
+document.querySelectorAll('#examples a').forEach(function(a) {
+    var file = 'examples/' + a.innerText;
     fetch(file).then(function(res) {
         res.text().then(function(text) {
-            data = text.split("\n");
-            bach.process(data);
+            a.dataset.data = text;
         });
     });
-};
+    a.addEventListener('click', bachLoad);
+});
+
+
