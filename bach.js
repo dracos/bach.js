@@ -42,7 +42,7 @@ bach.stop = function() {
     player && player.stop();
 };
 
-bach.process = function process(data) {
+bach.play = function play(data) {
     var conductor = new BandJS(null, 'european');
     conductor.setTempo(60);
     var soprano = conductor.createInstrument('triangle'),
@@ -90,6 +90,31 @@ bach.process = function process(data) {
     player = conductor.finish();
     player.play();
 };
+
+/* Processes for comments, but does not do any playing, just returns them */
+bach.process = function process(data) {
+    i = 0;
+    version = data[i++];
+    mods = [], key = [], major = [];
+    sop = [], alt = [], ten = [], bas = [], chord = [], length = [];
+    mod = 0;
+    load_data();
+    var comments = {};
+    for (i=0; i<notes; i++) {
+        messages = [];
+        examine_chord();
+        if (messages.length) {
+            comments[i] = messages;
+        }
+        if (major[mod] == 0 && i == notes-1) {
+            let third = (key[mod]+2) % 7;
+            if ((sop[i] % 7 == third) || (alt[i] % 7 == third) || (ten[i] % 7 == third) || (bas[i] % 7 == third)) {
+                messages = messages || []; messages.push('Tierce de Picardie');
+            }
+        }
+    }
+    return comments;
+}
 
 function load_data() {
     if (version == 3) {

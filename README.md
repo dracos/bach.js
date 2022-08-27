@@ -1,6 +1,7 @@
 # bach.js
 
-* `bach.process(data)` – data is an array of lines, see below for file format.
+* `bach.process(data)` – data is an array of lines, see below for file format. Scans for comments and returns them.
+* `bach.play(data)` – data is an array of lines, see below for file format. Scans and also plays the music.
 * `bach.stop()` – stops playback if playing.
 
 Below is the original help extracted from the StrongHelp file.

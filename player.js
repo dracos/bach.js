@@ -11,7 +11,7 @@ bachLoad = function(e) {
     oput.style.height = oput.offsetHeight + 'px';
     document.getElementById('stop').style.display = 'block';
     data = this.dataset.data.split("\n");
-    bach.process(data);
+    bach.play(data);
 };
 
 document.querySelectorAll('#examples a').forEach(function(a) {
