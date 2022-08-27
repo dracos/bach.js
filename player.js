@@ -10,7 +10,7 @@ bachLoad = function(e) {
     oput.innerHTML = '';
     oput.style.height = oput.offsetHeight + 'px';
     document.getElementById('stop').style.display = 'block';
-    data = this.dataset.data.split("\n");
+    var data = this.dataset.data.split("\n");
     bach.play(data);
 };
 

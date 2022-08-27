@@ -56,7 +56,7 @@ bach.play = function play(data) {
     mods = [], key = [], major = [];
     sop = [], alt = [], ten = [], bas = [], chord = [], length = [];
 
-    load_data();
+    load_data(data);
 
     var comments = {};
     conductor.events.subscribe('bufferNotes', function(data) {
@@ -98,7 +98,7 @@ bach.process = function process(data) {
     mods = [], key = [], major = [];
     sop = [], alt = [], ten = [], bas = [], chord = [], length = [];
     mod = 0;
-    load_data();
+    load_data(data);
     var comments = {};
     for (i=0; i<notes; i++) {
         messages = [];
@@ -116,11 +116,11 @@ bach.process = function process(data) {
     return comments;
 }
 
-function load_data() {
+function load_data(data) {
     if (version == 3) {
-        load_version_three();
+        load_version_three(data);
     } else if (version == 2) {
-        load_version_two();
+        load_version_two(data);
     }
     for (var j=0; j<notes; j++) {
         var line = data[i++];
@@ -467,14 +467,14 @@ function note(part, voice, messages) {
     }
 }
 
-function load_version_two() {
+function load_version_two(data) {
     notes = data[i++];
     modsL = 1;
     key[0] = parseInt(data[i++]);
     major[0] = parseInt(data[i++]);
 }
 
-function load_version_three() {
+function load_version_three(data) {
     notes = data[i++];
     modsL = data[i++];
     for (var j=0; j<modsL; j++) {
