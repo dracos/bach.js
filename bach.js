@@ -73,6 +73,24 @@ bach.process = function process(data) {
         length.push(parseInt(data[i++]));
     }
 
+    var comments = {};
+    conductor.events.subscribe('bufferNotes', function(data) {
+        if (data.note.bach_messages) {
+            comments[data.note.bach_step] = [data.note.startTime, data.note.bach_messages];
+        }
+    });
+    conductor.events.subscribe('updateTotalPlayTime', function(data) {
+        var keys = Object.keys(comments);
+        keys.sort((a, b) => a - b);
+        while (keys.length && comments[keys[0]][0] < data.currentPlayTime) {
+            var oput = document.getElementById('output');
+            oput.innerHTML += '<li>' + (parseInt(keys[0])+1) + ': ' + (comments[keys[0]][1]);
+            oput.scrollTop = oput.scrollHeight; // - oput.clientHeight;
+            delete comments[keys[0]];
+            keys.shift();
+        }
+    });
+
     mod = 0;
 
     for (i=0; i<notes; i++) {
@@ -411,7 +429,11 @@ function note(part, voice, messages) {
             nexti++;
         }
     }
-    voice.note(lengths[lll], p, lll >= 20 ? 0 : 1, [i, messages]);
+    voice.note(lengths[lll], p, lll >= 20 ? 0 : 1);
+    if (messages.length) {
+        voice.notes[voice.notes.length-1].bach_step = i;
+        voice.notes[voice.notes.length-1].bach_messages = messages;
+    }
 }
 
 function load_version_two() {

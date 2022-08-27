@@ -20,6 +20,8 @@
  */
 module.exports = Conductor;
 
+const Pubsub = _dereq_('./events');
+
 var packs = {
     instrument: {},
     rhythm: {},
@@ -60,6 +62,7 @@ function Conductor(tuning, rhythm) {
             8: 4.50
         };
 
+    conductor.events = new Pubsub();
     conductor.packs = packs;
     conductor.pitches = packs.tuning[tuning];
     conductor.notes = packs.rhythm[rhythm];
@@ -188,6 +191,7 @@ function Conductor(tuning, rhythm) {
      * Remove all instruments and recreate AudioContext
      */
     conductor.destroy = function() {
+        conductor.audioContext.close();
         conductor.audioContext = new AudioContext();
         conductor.instruments.length = 0;
         conductor.masterVolume = conductor.audioContext.createGain();
@@ -315,7 +319,43 @@ Conductor.loadPack = function(type, name, data) {
     packs[type][name] = data;
 };
 
-},{"./instrument.js":5,"./player.js":7,"audiocontext":1}],3:[function(_dereq_,module,exports){
+},{"./events":3,"./instrument.js":6,"./player.js":8,"audiocontext":1}],3:[function(_dereq_,module,exports){
+// https://davidwalsh.name/pubsub-javascript
+
+module.exports = Pubsub;
+
+function Pubsub() {
+    var pubsub = this,
+        topics = {},
+        hOP = topics.hasOwnProperty;
+
+    pubsub.subscribe = function(topic, listener) {
+      // Create the topic's object if not yet created
+      if(!hOP.call(topics, topic)) topics[topic] = [];
+
+      // Add the listener to queue
+      var index = topics[topic].push(listener) -1;
+
+      // Provide handle back for removal of topic
+      return {
+        remove: function() {
+          delete topics[topic][index];
+        }
+      };
+    };
+
+    pubsub.publish = function(topic, info) {
+      // If the topic doesn't exist, or there's no listeners in queue, just leave
+      if(!hOP.call(topics, topic)) return;
+
+      // Cycle through topics queue, fire!
+      topics[topic].forEach(function(item) {
+        item(info != undefined ? info : {});
+      });
+    };
+}
+
+},{}],4:[function(_dereq_,module,exports){
 /**
  * Band.js - Music Composer
  * An interface for the Web Audio API that supports rhythms, multiple instruments, repeating sections, and complex
@@ -431,7 +471,7 @@ function NoisesInstrumentPack(name, audioContext) {
     }
 }
 
-},{}],4:[function(_dereq_,module,exports){
+},{}],5:[function(_dereq_,module,exports){
 /**
  * Band.js - Music Composer
  * An interface for the Web Audio API that supports rhythms, multiple instruments, repeating sections, and complex
@@ -472,7 +512,7 @@ function OscillatorInstrumentPack(name, audioContext) {
     };
 }
 
-},{}],5:[function(_dereq_,module,exports){
+},{}],6:[function(_dereq_,module,exports){
 /**
  * Band.js - Music Composer
  * An interface for the Web Audio API that supports rhythms, multiple instruments, repeating sections, and complex
@@ -568,7 +608,7 @@ function Instrument(name, pack, conductor) {
      * @param [pitch] - Comma separated string if more than one pitch
      * @param [tie]
      */
-    instrument.note = function(rhythm, pitch, tie, cb) {
+    instrument.note = function(rhythm, pitch, tie) {
         var duration = getDuration(rhythm),
             articulationGap = tie ? 0 : duration * articulationGapPercentage;
 
@@ -588,7 +628,6 @@ function Instrument(name, pack, conductor) {
         }
 
         instrument.notes.push({
-            cb: cb,
             rhythm: rhythm,
             pitch: pitch,
             duration: duration,
@@ -696,7 +735,7 @@ function Instrument(name, pack, conductor) {
     };
 }
 
-},{}],6:[function(_dereq_,module,exports){
+},{}],7:[function(_dereq_,module,exports){
 /**
  * Band.js - Music Composer
  * An interface for the Web Audio API that supports rhythms, multiple instruments, repeating sections, and complex
@@ -716,7 +755,7 @@ module.exports.loadPack('rhythm', 'northAmerican', _dereq_('./rhythm-packs/north
 module.exports.loadPack('rhythm', 'european', _dereq_('./rhythm-packs/european.js'));
 module.exports.loadPack('tuning', 'equalTemperament', _dereq_('./tuning-packs/equal-temperament.js'));
 
-},{"./conductor.js":2,"./instrument-packs/noises.js":3,"./instrument-packs/oscillators.js":4,"./rhythm-packs/european.js":8,"./rhythm-packs/north-american.js":9,"./tuning-packs/equal-temperament.js":10}],7:[function(_dereq_,module,exports){
+},{"./conductor.js":2,"./instrument-packs/noises.js":4,"./instrument-packs/oscillators.js":5,"./rhythm-packs/european.js":9,"./rhythm-packs/north-american.js":10,"./tuning-packs/equal-temperament.js":11}],8:[function(_dereq_,module,exports){
 /**
  * Band.js - Music Composer
  * An interface for the Web Audio API that supports rhythms, multiple instruments, repeating sections, and complex
@@ -739,8 +778,6 @@ function Player(conductor) {
         currentPlayTime,
         totalPlayTime = 0,
         faded = false;
-
-    player.comments = {};
 
     calculateTotalDuration();
 
@@ -899,13 +936,13 @@ function Player(conductor) {
                     while (++index3 < pitch.length) {
                         var p = pitch[index3];
                         notes.push({
-                            cb: note.cb,
                             startTime: startTime,
                             stopTime: stopTime,
                             node: instrument.instrument.createNote(gain, conductor.pitches[p.trim()] || parseFloat(p)),
                             gain: gain,
                             volumeLevel: volumeLevel
                         });
+                        conductor.events.publish('bufferNotes', { note: note, notes: notes });
                     }
                 }
             }
@@ -947,16 +984,7 @@ function Player(conductor) {
         }
         conductor.percentageComplete = totalPlayTime / conductor.totalDuration;
         currentPlayTime = conductor.audioContext.currentTime;
-
-        var keys = Object.keys(player.comments);
-        keys.sort((a, b) => a - b);
-        while (keys.length && player.comments[keys[0]][0] < currentPlayTime) {
-            var oput = document.getElementById('output');
-            oput.innerHTML += '<li>' + (parseInt(keys[0])+1) + ': ' + (player.comments[keys[0]][1]);
-            oput.scrollTop = oput.scrollHeight; // - oput.clientHeight;
-            delete player.comments[keys[0]];
-            keys.shift();
-        }
+        conductor.events.publish('updateTotalPlayTime', { currentPlayTime: currentPlayTime });
     }
 
     player.paused = false;
@@ -985,10 +1013,6 @@ function Player(conductor) {
                     var note = notes[index];
                     var startTime = note.startTime + timeOffset,
                         stopTime = note.stopTime + timeOffset;
-
-                    if (note.cb && note.cb[1].length) {
-                        player.comments[note.cb[0]] = [startTime, note.cb[1]];
-                    }
 
                     /**
                      * If no tie, then we need to introduce a volume ramp up to remove any clipping
@@ -1134,7 +1158,7 @@ function Player(conductor) {
     };
 }
 
-},{}],8:[function(_dereq_,module,exports){
+},{}],9:[function(_dereq_,module,exports){
 /**
  * Band.js - Music Composer
  * An interface for the Web Audio API that supports rhythms, multiple instruments, repeating sections, and complex
@@ -1163,7 +1187,7 @@ module.exports = {
     demisemiquaver: 0.03125
 };
 
-},{}],9:[function(_dereq_,module,exports){
+},{}],10:[function(_dereq_,module,exports){
 /**
  * Band.js - Music Composer
  * An interface for the Web Audio API that supports rhythms, multiple instruments, repeating sections, and complex
@@ -1192,7 +1216,7 @@ module.exports = {
     thirtySecond: 0.03125
 };
 
-},{}],10:[function(_dereq_,module,exports){
+},{}],11:[function(_dereq_,module,exports){
 /**
  * Band.js - Music Composer
  * An interface for the Web Audio API that supports rhythms, multiple instruments, repeating sections, and complex
@@ -1345,6 +1369,6 @@ module.exports = {
     'C8': 4186.01
 };
 
-},{}]},{},[6])
-(6)
+},{}]},{},[7])
+(7)
 });
