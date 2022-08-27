@@ -1,5 +1,3 @@
-(function(){
-
 var keys = [
     [ 'E', 'F', 'G', 'A', 'Bb', 'C#', 'D' ], // Dm
     [ 'E', 'F#', 'G', 'A', 'B', 'C#', 'D' ],
@@ -427,13 +425,11 @@ class Bach {
 
 var player; // The web player
 
-window.bach = bach = {};
-
-bach.stop = function() {
+export function stop() {
     player && player.stop();
 };
 
-bach.play = function play(data) {
+export function play(data) {
     var conductor = new BandJS(null, 'european');
     conductor.setTempo(60);
     var soprano = conductor.createInstrument('triangle'),
@@ -474,7 +470,7 @@ bach.play = function play(data) {
 };
 
 /* Processes for comments, but does not do any playing, just returns them */
-bach.process = function process(data) {
+export function process(data) {
     var bbb = new Bach(data);
     var comments = {};
     for (var i=0; i<bbb.notes; i++) {
@@ -491,5 +487,3 @@ bach.process = function process(data) {
     }
     return comments;
 }
-
-})();

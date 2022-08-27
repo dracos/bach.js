@@ -1,17 +1,24 @@
-bachStop = function() {
-    bach.stop();
-    document.getElementById('stop').style.display = 'none';
+import { stop, play } from './bach.js';
+
+var stopElt = document.getElementById('stop');
+
+var bachStop = function(e) {
+    e.preventDefault();
+    stop();
+    stopElt.style.display = 'none';
 };
 
-bachLoad = function(e) {
+document.getElementById('stop').addEventListener('click', bachStop);
+
+var bachLoad = function(e) {
     e.preventDefault();
-    bachStop();
+    bachStop(e);
     var oput = document.getElementById('output');
     oput.innerHTML = '';
     oput.style.height = oput.offsetHeight + 'px';
-    document.getElementById('stop').style.display = 'block';
+    stopElt.style.display = 'block';
     var data = this.dataset.data.split("\n");
-    bach.play(data);
+    play(data);
 };
 
 document.querySelectorAll('#examples a').forEach(function(a) {
