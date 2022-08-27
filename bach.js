@@ -56,22 +56,7 @@ bach.process = function process(data) {
     mods = [], key = [], major = [];
     sop = [], alt = [], ten = [], bas = [], chord = [], length = [];
 
-    if (version == 3) {
-        load_version_three();
-    } else if (version == 2) {
-        load_version_two();
-    }
-    for (var j=0; j<notes; j++) {
-        var line = data[i++];
-        sop.push(line.charCodeAt(0) - 64);
-        alt.push(line.charCodeAt(1) - 64);
-        ten.push(line.charCodeAt(2) - 64);
-        bas.push(line.charCodeAt(3) - 64);
-        chord.push(line.charCodeAt(4) - 64);
-    }
-    for (var j=0; j<notes; j++) {
-        length.push(parseInt(data[i++]));
-    }
+    load_data();
 
     var comments = {};
     conductor.events.subscribe('bufferNotes', function(data) {
@@ -95,75 +80,7 @@ bach.process = function process(data) {
 
     for (i=0; i<notes; i++) {
         messages = [];
-
-        if (mod < modsL && i+1 == mods[mod+1]) {
-            mod += 1;
-            messages.push('Modulating to new key');
-        }
-        real = real_chord(i);
-        var sa = 0, st = 0, sb = 0, at = 0, ab = 0, tb = 0;
-
-        switch (roman(i)) {
-            case "Ic":
-                if (i < notes-1 && chord[i] == 1 && next_chord() != 5 && next_chord() != 9)
-                    messages.push("Chord Ic must immediately be followed by V");
-                break;
-            case "II":
-                if (major[mod] == 0) messages.push("Chord II must be IIb in a minor key");
-                break;
-            case "III": case "IIIb":
-                if (major[mod] == 0) messages.push("Avoid chord III in the minor key");
-                break;
-            case "V": case "V7":
-                if (i < notes-1 && next_roman() == "IV") messages.push("V->IV not allowed");
-                break;
-            case "Vb": case "V7b":
-                if (i < notes-1 && next_roman() == 'IV') messages.push("Vb->IV not allowed");
-                break;
-            case "Vc": case "V7c":
-                if (i > 0 && i < notes-1 && (chord[i] == 5 || chord[i] == 9) && (last_chord() != 1 || next_chord() != 1))
-                    messages.push("Chord Vc must come between chords I and Ib");
-                break;
-            case "V7d":
-                if (i < notes-1 && (chord[i] == 5 || chord[i] == 9) && next_roman() != "Ib")
-                    messages.push("Chord V7d must be followed by Ib");
-                break;
-            case "VII":
-                 messages.push("Chord VII must be VIIb as it is diminished");
-                break;
-            case "IIc": case "IIIc": case "IVc": case "VIc": case "VIIc":
-                messages.push("There is no such chord as " + roman(i));
-                break;
-        }
-
-        check_spacing();
-        check_major3rd();
-        if (real == 3 || real == 7 || real == 13) check_leading();
-        if (i > 0) check_crossing();
-        check_overlap();
-        if (i < notes-1) {
-            check_lead_step();
-            if (chord[i] == 9 || (chord[i] == 10 && chord[i-1] == 9)) check_7th_step();
-            sa = check_consec(sop[i], alt[i], sop[i+1], alt[i+1], 1, "SA")
-            st = check_consec(sop[i], ten[i], sop[i+1], ten[i+1], 1, "ST")
-            sb = check_consec(sop[i], bas[i], sop[i+1], bas[i+1], 1, "SB")
-            at = check_consec(alt[i], ten[i], alt[i+1], ten[i+1], 1, "AT")
-            ab = check_consec(alt[i], bas[i], alt[i+1], bas[i+1], 1, "AB")
-            tb = check_consec(ten[i], bas[i], ten[i+1], bas[i+1], 1, "TB")
-        }
-        if (i < notes-2 && (chord[i+1] == 12 || chord[i+1] == 10)) {
-            if (sa == 0) check_consec(sop[i], alt[i], sop[i+2], alt[i+2], 2, "SA without unessential", sa)
-            if (st == 0) check_consec(sop[i], ten[i], sop[i+2], ten[i+2], 2, "ST without unessential", st)
-            if (sb == 0) check_consec(sop[i], bas[i], sop[i+2], bas[i+2], 2, "SB without unessential", sb)
-            if (at == 0) check_consec(alt[i], ten[i], alt[i+2], ten[i+2], 2, "AT without unessential", at)
-            if (ab == 0) check_consec(alt[i], bas[i], alt[i+2], bas[i+2], 2, "AB without unessential", ab)
-            if (tb == 0) check_consec(ten[i], bas[i], ten[i+2], bas[i+2], 2, "TB without unessential", tb)
-        }
-
-        if (chord[i] == 10) check_unaccented();
-        if (chord[i] == 11) check_accented();
-        if (chord[i] == 12) check_suspension();
-
+        examine_chord();
         note(sop, soprano, messages);
         note(alt, alto, messages);
         note(ten, tenor, messages);
@@ -172,6 +89,95 @@ bach.process = function process(data) {
 
     player = conductor.finish();
     player.play();
+};
+
+function load_data() {
+    if (version == 3) {
+        load_version_three();
+    } else if (version == 2) {
+        load_version_two();
+    }
+    for (var j=0; j<notes; j++) {
+        var line = data[i++];
+        sop.push(line.charCodeAt(0) - 64);
+        alt.push(line.charCodeAt(1) - 64);
+        ten.push(line.charCodeAt(2) - 64);
+        bas.push(line.charCodeAt(3) - 64);
+        chord.push(line.charCodeAt(4) - 64);
+    }
+    for (var j=0; j<notes; j++) {
+        length.push(parseInt(data[i++]));
+    }
+}
+
+function examine_chord() {
+    if (mod < modsL && i+1 == mods[mod+1]) {
+        mod += 1;
+        messages.push('Modulating to new key');
+    }
+    real = real_chord(i);
+    var sa = 0, st = 0, sb = 0, at = 0, ab = 0, tb = 0;
+
+    switch (roman(i)) {
+        case "Ic":
+            if (i < notes-1 && chord[i] == 1 && next_chord() != 5 && next_chord() != 9)
+                messages.push("Chord Ic must immediately be followed by V");
+            break;
+        case "II":
+            if (major[mod] == 0) messages.push("Chord II must be IIb in a minor key");
+            break;
+        case "III": case "IIIb":
+            if (major[mod] == 0) messages.push("Avoid chord III in the minor key");
+            break;
+        case "V": case "V7":
+            if (i < notes-1 && next_roman() == "IV") messages.push("V->IV not allowed");
+            break;
+        case "Vb": case "V7b":
+            if (i < notes-1 && next_roman() == 'IV') messages.push("Vb->IV not allowed");
+            break;
+        case "Vc": case "V7c":
+            if (i > 0 && i < notes-1 && (chord[i] == 5 || chord[i] == 9) && (last_chord() != 1 || next_chord() != 1))
+                messages.push("Chord Vc must come between chords I and Ib");
+            break;
+        case "V7d":
+            if (i < notes-1 && (chord[i] == 5 || chord[i] == 9) && next_roman() != "Ib")
+                messages.push("Chord V7d must be followed by Ib");
+            break;
+        case "VII":
+             messages.push("Chord VII must be VIIb as it is diminished");
+            break;
+        case "IIc": case "IIIc": case "IVc": case "VIc": case "VIIc":
+            messages.push("There is no such chord as " + roman(i));
+            break;
+    }
+
+    check_spacing();
+    check_major3rd();
+    if (real == 3 || real == 7 || real == 13) check_leading();
+    if (i > 0) check_crossing();
+    check_overlap();
+    if (i < notes-1) {
+        check_lead_step();
+        if (chord[i] == 9 || (chord[i] == 10 && chord[i-1] == 9)) check_7th_step();
+        sa = check_consec(sop[i], alt[i], sop[i+1], alt[i+1], 1, "SA")
+        st = check_consec(sop[i], ten[i], sop[i+1], ten[i+1], 1, "ST")
+        sb = check_consec(sop[i], bas[i], sop[i+1], bas[i+1], 1, "SB")
+        at = check_consec(alt[i], ten[i], alt[i+1], ten[i+1], 1, "AT")
+        ab = check_consec(alt[i], bas[i], alt[i+1], bas[i+1], 1, "AB")
+        tb = check_consec(ten[i], bas[i], ten[i+1], bas[i+1], 1, "TB")
+    }
+    if (i < notes-2 && (chord[i+1] == 12 || chord[i+1] == 10)) {
+        if (sa == 0) check_consec(sop[i], alt[i], sop[i+2], alt[i+2], 2, "SA without unessential", sa)
+        if (st == 0) check_consec(sop[i], ten[i], sop[i+2], ten[i+2], 2, "ST without unessential", st)
+        if (sb == 0) check_consec(sop[i], bas[i], sop[i+2], bas[i+2], 2, "SB without unessential", sb)
+        if (at == 0) check_consec(alt[i], ten[i], alt[i+2], ten[i+2], 2, "AT without unessential", at)
+        if (ab == 0) check_consec(alt[i], bas[i], alt[i+2], bas[i+2], 2, "AB without unessential", ab)
+        if (tb == 0) check_consec(ten[i], bas[i], ten[i+2], bas[i+2], 2, "TB without unessential", tb)
+    }
+
+    if (chord[i] == 10) check_unaccented();
+    if (chord[i] == 11) check_accented();
+    if (chord[i] == 12) check_suspension();
 }
 
 function real_chord(c) {
