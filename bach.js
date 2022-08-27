@@ -1,3 +1,5 @@
+import BandJS from './band.js';
+
 var keys = [
     [ 'E', 'F', 'G', 'A', 'Bb', 'C#', 'D' ], // Dm
     [ 'E', 'F#', 'G', 'A', 'B', 'C#', 'D' ],

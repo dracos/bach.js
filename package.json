@@ -1,12 +1,12 @@
 {
   "name": "@dracos/bach.js",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "A JavaScript library that scans harmony for ‘rule’ “violations”.",
   "main": "bach.js",
   "module": "bach.js",
   "files": [
-    "bach.js"
+    "bach.js", "band.js"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
