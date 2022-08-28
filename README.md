@@ -4,7 +4,7 @@
 * `bach.play(data)` – data is an array of lines, see below for file format. Scans and also plays the music.
 * `bach.stop()` – stops playback if playing.
 
-Below is the original help extracted from the StrongHelp file.
+Below is the original help extracted from the StrongHelp file, updated with more information.
 
 ---
 
@@ -52,9 +52,22 @@ to hear what it really sounds like, you can add a list of lengths (in
 twentieths of a second) to the end of your Music file, after it has been
 created (see example files 3b and 3c).
 
-* Number of notes
-* Key (0=D, 1=E, 2=F, 3=G, 4=A, 5=B, 6=C)
-* Major (1 for yes, 0 for no)
+Line 1 is the version number (2 or 3). Version 2 is only in one key, version 3 can handle modulations.
+
+Line 2 is the number of notes.
+
+If the file is version 2, that is then followed by:
+
+* Line 3: Key (0=D, 1=E, 2=F, 3=G, 4=A, 5=B, 6=C)
+* Line 4: Major (1 for yes, 0 for no)
+
+If it is version 3, that is followed by:
+
+* Line 3: the number of keys the piece is in
+* That many groups of three lines, each consisting of:
+    * Which note the piece modulates on (numbered from 1)
+    * Key (0=D, 1=E, 2=F, 3=G, 4=A, 5=B, 6=C)
+    * Major (1 for yes, 0 for no)
 
 ...followed by 5 letters per line, one line for each note. First four letters
 are the notes (SATB), the fifth letter is the chord.
